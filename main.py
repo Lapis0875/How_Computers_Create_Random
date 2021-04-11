@@ -17,3 +17,10 @@ val1 = random1.random()
 val2 = random2.random()
 print(f'random 1 = random 2 : {val1 == val2}')
 print(f'random 1 : {val1}, random 2 : {val2}')
+
+# seed 값이 바뀌면 더 이상 같은 값이 나오지 않습니다.
+random2.seed(416)
+val1 = random1.random()
+val2 = random2.random()
+print(f'random 1 = random 2 : {val1 == val2}')
+print(f'random 1 : {val1}, random 2 : {val2}')
