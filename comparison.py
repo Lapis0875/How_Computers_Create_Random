@@ -21,13 +21,13 @@ print(f'random 1 : {val1}, random 2 : {val2}')
 
 # 만약 의사 랜덤 생성기의 상태 (시드) 를 알 경우, 공격자는 이 의사 랜덤의 값을 예측할 수 있습니다.
 random2.seed(411)
-val1 = random1.random()
 val2 = random2.random()
 print(f'random 1 = random 2 : {val1 == val2}')
 print(f'random 1 : {val1}, random 2 : {val2}')
 
 # 하드웨어 랜덤 생성기
 systemRand = SystemRandom(411)
+help(systemRand)
 val1 = random1.random()
 val2 = systemRand.random()
 print(f'random 1 = hardware random : {val1 == val2}')

@@ -60,7 +60,7 @@ def ACCESS_CLASS_CONSTANTS(func):
         required_consts = {
             var: mapping[var]
             for var, typeHint in func.__annotations__.items()
-            if _CHECK_TYPEHINT_FINAL(typeHint)
+            if typeHint == int
         }
         logger.debug(f'Parsed required class constatns : {required_consts}')
         logger.debug(f'Patching for method `{func.__name__}` in object `{self}`')

@@ -12,7 +12,7 @@ class RandomMethods(ABC):
         self.current_seed = a
 
     @abstractmethod
-    def random(self, count: int) -> List[int]:  ...
+    def randoms(self, count: int) -> List[int]:  ...
 
 
 class LinearCongruentialMethod(RandomMethods):
@@ -23,10 +23,10 @@ class LinearCongruentialMethod(RandomMethods):
     C: Final[int] = 12345
 
     @ACCESS_CLASS_CONSTANTS
-    def generate_next_int(self, x: int, *, A: Final[int], C: Final[int], M: Final[int]) -> int:
+    def generate_next_int(self, x: int, *, A: int, C: int, M: int) -> int:
         return int((A * x + C) % M)
 
-    def random(self, count: int) -> List[int]:
+    def randoms(self, count: int) -> List[int]:
         results: List[int] = [time()]
         for i in range(count):
             results.append(self.generate_next_int(results[i]))
@@ -63,7 +63,7 @@ class MersenneTwister(RandomMethods):
         self.index = 625
 
     @ACCESS_CLASS_CONSTANTS
-    def seed(self, a=0, *, F: Final[int], N: Final[int], W: Final[int]):
+    def seed(self, a=0, *, F: int, N: int, W: int):
         # Official Python implementation at
         # https://github.com/python/cpython/blob/6989af0bc7ea1e9a1acea16794e6f723d7b44110/Modules/_randommodule.c#L265
         self.state[0] = self.current_seed = a
@@ -74,7 +74,7 @@ class MersenneTwister(RandomMethods):
             self.state[i] = int_32(temp)
 
     @ACCESS_CLASS_CONSTANTS
-    def twist(self, *, N: Final[int]):
+    def twist(self, *, N: int):
         # 32비트 int를 사용하므로 0xFFFFFFFF 마스킹 스킵
         for i in range(1, N):
             # Can skip in 32-bit
@@ -93,8 +93,7 @@ class MersenneTwister(RandomMethods):
         self.index = 0
 
     @ACCESS_CLASS_CONSTANTS
-    def get_random_int(self, *, N: Final[int], U: Final[int], S: Final[int], B: Final[int], T: Final[int],
-                       C: Final[int], L: Final[int]):
+    def get_random_int(self, *, N: int, U: int, S: int, B: int, T: int, C: int, L: int):
         if self.index >= N:
             self.twist()
 
@@ -109,7 +108,7 @@ class MersenneTwister(RandomMethods):
         return int_32(y)
 
     def random(self):
-        """ return uniform ditribution in [0,1) """
+        """ return uniform distribution in [0,1) """
         return self.get_random_int() / 4294967296  # = 0xFFFFFFFF + 1
 
     def randrange(self, a, b):
@@ -122,6 +121,9 @@ class MersenneTwister(RandomMethods):
     def randint(self, a, b):
         """return random int in [a, b]"""
         return self.randrange(a, b + 1)
+
+    def randoms(self, count: int) -> List[int]:
+        return [self.random() for _ in range(count)]
 
     def test(self):
         print(f'| 현재 시드 : {self.current_seed}')
