@@ -191,7 +191,7 @@ def main():
     randLinear.test()
     # Change 'M' value and check results.
     LinearCongruentialMethod.M = 2**2
-    COLLECT_CLASS_CONSTANTS(LinearCongruentialMethod)
+    COLLECT_CLASS_CONSTANTS(LinearCongruentialMethod)   # Since @GET_CLASS_CONSTANTS use cached mapping, class attributes must be cached again to apply changes.
     randLinear.test()
 
     print('메르센 트위스터 :')
