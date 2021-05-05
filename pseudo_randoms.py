@@ -69,7 +69,7 @@ class LinearCongruentialMethod(RandomMethods):
         return self.randrange(a, b+1)
 
     def test(self):
-        print(f'| 현재 시드 : {self._seed}')
+        print(f'| 현재 시드 : {self._seed}, M = {self.M}')
         print('1개 랜덤값 :')
         print(self.random())
         print('5개 랜덤값 :')
@@ -188,6 +188,10 @@ def main():
     randLinear = LinearCongruentialMethod()
     randLinear.test()
     randLinear.seed(2021)
+    randLinear.test()
+    # Change 'M' value and check results.
+    LinearCongruentialMethod.M = 2**2
+    COLLECT_CLASS_CONSTANTS(LinearCongruentialMethod)
     randLinear.test()
 
     print('메르센 트위스터 :')
