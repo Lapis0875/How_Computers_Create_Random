@@ -1,20 +1,30 @@
 from abc import ABC, abstractmethod
-from time import time
-from typing import List, Final, Optional, Dict
-from utils import ACCESS_CLASS_CONSTANTS, int_32
+from time import time, sleep
+from typing import List, Final
+from utils import int_32, Const, GET_CLASS_CONSTANTS, COLLECT_CLASS_CONSTANTS
 
 
 class RandomMethods(ABC):
     def __init__(self):
-        self.current_seed = 0
+        self._seed: float = 0
 
-    def seed(self, a: int = 0):
-        self.current_seed = a
+    def seed(self, a: float = 0):
+        self._seed = a
+
+    @abstractmethod
+    def random(self) -> float:  ...
+
+    @abstractmethod
+    def randrange(self, a, b) -> int:   ...
+
+    @abstractmethod
+    def randint(self, a, b) -> int: ...
 
     @abstractmethod
     def randoms(self, count: int) -> List[int]:  ...
 
 
+@COLLECT_CLASS_CONSTANTS
 class LinearCongruentialMethod(RandomMethods):
     """선형합동법 (Linear Congruential Method) - ANSI의 C 표준을 참고해 구현함."""
     # values used in ANSI C Standards
@@ -22,22 +32,52 @@ class LinearCongruentialMethod(RandomMethods):
     A: Final[int] = 1103515245
     C: Final[int] = 12345
 
-    @ACCESS_CLASS_CONSTANTS
-    def generate_next_int(self, x: int, *, A: int, C: int, M: int) -> int:
-        return int((A * x + C) % M)
+    def __init__(self):
+        super(LinearCongruentialMethod, self).__init__()
+        self.seed(time())
+        self.__last: float = self._seed
+        self.__index: int = 0
 
-    def randoms(self, count: int) -> List[int]:
-        results: List[int] = [time()]
+    @GET_CLASS_CONSTANTS
+    def generate_next_number(self, x, *, A: Const, C: Const, M: Const) -> float:
+        self.__index += 1
+        return (A * x + C) % M
+
+    def generate_next_int(self, x) -> int:
+        return int(self.generate_next_number(x))
+
+    @GET_CLASS_CONSTANTS
+    def randoms(self, count: int, *, M: Const) -> List[float]:
+        if self.__index >= M:
+            self.seed(time())
+        results: List[float] = [self.__last]
         for i in range(count):
-            results.append(self.generate_next_int(results[i]))
+            results.append(self.generate_next_number(results[i]))
+        self.__last = results[-1]
         return results[1:]
 
+    def random(self) -> float:
+        return self.randoms(1)[0]
+
+    def randrange(self, a, b) -> int:
+        """ return random int in [a,b) """
+        n = self.random()
+        return int(n / (1 / (b - a)) + a)
+
+    def randint(self, a, b) -> int:
+        """ return random int in [a,b] """
+        return self.randrange(a, b+1)
+
     def test(self):
-        print(f'| 현재 시드 : {self.current_seed}')
-        for i, value in enumerate(self.random(5)):
+        print(f'| 현재 시드 : {self._seed}')
+        print('1개 랜덤값 :')
+        print(self.random())
+        print('5개 랜덤값 :')
+        for i, value in enumerate(self.randoms(5)):
             print(f'| {i + 1} 번째 랜덤 값 : {value}')
 
 
+@COLLECT_CLASS_CONSTANTS
 class MersenneTwister(RandomMethods):
     """메르센 트위스터 알고리즘을 구현함. 2002년도 개선 버전"""
     # Coefficients
@@ -62,19 +102,19 @@ class MersenneTwister(RandomMethods):
         self.state = [0] * 624
         self.index = 625
 
-    @ACCESS_CLASS_CONSTANTS
-    def seed(self, a=0, *, F: int, N: int, W: int):
+    @GET_CLASS_CONSTANTS
+    def seed(self, a=0, *, F: Const, N: Const, W: Const):
         # Official Python implementation at
         # https://github.com/python/cpython/blob/6989af0bc7ea1e9a1acea16794e6f723d7b44110/Modules/_randommodule.c#L265
-        self.state[0] = self.current_seed = a
+        self.state[0] = self._seed = a
         for i in range(1, N):
             temp = (
                     F * (self.state[i - 1] ^ (self.state[i - 1] >> (W - 2))) + i
             )
             self.state[i] = int_32(temp)
 
-    @ACCESS_CLASS_CONSTANTS
-    def twist(self, *, N: int):
+    @GET_CLASS_CONSTANTS
+    def twist(self, *, N: Const):
         # 32비트 int를 사용하므로 0xFFFFFFFF 마스킹 스킵
         for i in range(1, N):
             # Can skip in 32-bit
@@ -92,8 +132,8 @@ class MersenneTwister(RandomMethods):
             )
         self.index = 0
 
-    @ACCESS_CLASS_CONSTANTS
-    def get_random_int(self, *, N: int, U: int, S: int, B: int, T: int, C: int, L: int):
+    @GET_CLASS_CONSTANTS
+    def generate_random_int(self, *, N: Const, U: Const, S: Const, B: Const, T: Const, C: Const, L: Const):
         if self.index >= N:
             self.twist()
 
@@ -107,9 +147,9 @@ class MersenneTwister(RandomMethods):
 
         return int_32(y)
 
-    def random(self):
+    def random(self) -> float:
         """ return uniform distribution in [0,1) """
-        return self.get_random_int() / 4294967296  # = 0xFFFFFFFF + 1
+        return self.generate_random_int() / 4294967296  # = 0xFFFFFFFF + 1
 
     def randrange(self, a, b):
         # Official Python implementation at
@@ -122,34 +162,38 @@ class MersenneTwister(RandomMethods):
         """return random int in [a, b]"""
         return self.randrange(a, b + 1)
 
-    def randoms(self, count: int) -> List[int]:
+    def randoms(self, count: int) -> List[float]:
         return [self.random() for _ in range(count)]
 
     def test(self):
-        print(f'| 현재 시드 : {self.current_seed}')
+        print(f'| 현재 시드 : {self._seed}')
         for i in range(3):
-            print(f'| {i + 1} 번째 랜덤 숫자 : {self.get_random_int()}')
+            print(f'| {i + 1} 번째 랜덤 숫자 : {self.generate_random_int()}')
+
         print(f'| 0, 1 사이의 임의의 실수 : {self.random()}')
+
         print(f'| [1, 10) 범위의 임의의 정수 :')
         for _ in range(10):
             print(self.randrange(1, 10), end=" ")
         print()
+
         print(f'| [1, 10] 범위의 임의의 정수 :')
         for _ in range(10):
             print(self.randint(1, 10), end=" ")
+        print()
 
 
 def main():
     print('선형 합동법 :')
     randLinear = LinearCongruentialMethod()
-    randLinear.seed(123)
+    randLinear.test()
+    randLinear.seed(2021)
     randLinear.test()
 
     print('메르센 트위스터 :')
     randMT = MersenneTwister()
-    randMT.seed(123)
     randMT.test()
-    randMT.seed(456)
+    randMT.seed(2021)
     randMT.test()
 
 
