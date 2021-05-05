@@ -26,7 +26,7 @@ print(f'random 1 = random 2 : {val1 == val2}')
 print(f'random 1 : {val1}, random 2 : {val2}')
 
 # 하드웨어 랜덤 생성기
-systemRand = SystemRandom(411)
+systemRand = SystemRandom()
 val1 = random1.random()
 val2 = systemRand.random()
 print(f'random 1 = hardware random : {val1 == val2}')
